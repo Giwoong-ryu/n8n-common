@@ -1,0 +1,214 @@
+/**
+ * N8N AI Copilot - Sidebar CSS
+ * N8N 페이지에 삽입될 AI 사이드바 스타일
+ */
+
+/* Font Awesome Icons */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
+
+/* 사이드바 컨테이너 - 오른쪽 하단 절반 크기 */
+#n8n-ai-copilot-sidebar {
+  position: fixed;
+  bottom: 0; /* top → bottom */
+  right: -600px; /* 초기에는 숨김 (400px → 600px) */
+  width: 600px; /* 기본 너비 확대 (400px → 600px) */
+  height: 50vh; /* 100vh → 50vh (화면 절반) */
+  background: white;
+  box-shadow: -4px -4px 24px rgba(0, 0, 0, 0.15); /* 위쪽 그림자 추가 */
+  border-top-left-radius: 16px; /* 왼쪽 상단 모서리 둥글게 */
+  z-index: 999999;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 사이드바 열림 상태 */
+#n8n-ai-copilot-sidebar.open {
+  right: 0;
+}
+
+/* 사이드바 iframe */
+#n8n-ai-copilot-sidebar iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* 토글 버튼 */
+#n8n-ai-copilot-toggle {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  border: none;
+  cursor: pointer;
+  z-index: 999998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: white;
+  font-size: 24px;
+}
+
+#n8n-ai-copilot-toggle:hover {
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+#n8n-ai-copilot-toggle:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* 사이드바가 열렸을 때 토글 버튼 위치 조정 */
+#n8n-ai-copilot-toggle.sidebar-open {
+  right: 620px; /* 400px + 20px → 600px + 20px */
+}
+
+/* 알림 뱃지 */
+#n8n-ai-copilot-toggle .badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: #ef4444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  border: 2px solid white;
+}
+
+/* 반응형 - 작은 화면 */
+@media (max-width: 1024px) {
+  #n8n-ai-copilot-sidebar {
+    width: 100vw;
+    right: -100vw;
+  }
+  
+  #n8n-ai-copilot-toggle.sidebar-open {
+    right: calc(100vw - 76px);
+  }
+}
+
+/* 애니메이션 효과 */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* 토글 버튼 펄스 효과 (에러 감지 시) */
+#n8n-ai-copilot-toggle.has-notification {
+  animation: pulse 2s infinite;
+}
+
+/* 오버레이 (모바일용) */
+#n8n-ai-copilot-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999997;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#n8n-ai-copilot-overlay.show {
+  display: block;
+  opacity: 1;
+}
+
+/* N8N 컨텐츠 푸시 효과 (선택사항) */
+body.n8n-copilot-active {
+  margin-right: 600px; /* 400px → 600px */
+}
+
+@media (max-width: 1024px) {
+  body.n8n-copilot-active {
+    margin-right: 0;
+    overflow: hidden;
+  }
+}
+
+/* iframe 스타일 (리사이즈 핸들 공간 확보) */
+#n8n-ai-copilot-iframe {
+  position: absolute;
+  left: 15px; /* 왼쪽 리사이즈 핸들 공간 */
+  top: 15px; /* 위쪽 리사이즈 핸들 공간 */
+  width: calc(100% - 15px); /* 왼쪽 핸들 너비만큼 빼기 */
+  height: calc(100% - 15px); /* 위쪽 핸들 높이만큼 빼기 */
+  border: none;
+  z-index: 1; /* 리사이즈 핸들보다 아래 */
+  pointer-events: auto;
+}
+
+/* 드래그 핸들 (사이드바 크기 조절용) - 가로 (왼쪽) */
+#n8n-ai-copilot-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 15px;
+  height: 100%;
+  cursor: ew-resize;
+  background: rgba(102, 126, 234, 0.5); /* 더 보이게 */
+  z-index: 1000; /* 매우 높은 z-index */
+  transition: background 0.2s;
+  pointer-events: auto; /* 명시적으로 이벤트 허용 */
+}
+
+#n8n-ai-copilot-resize-handle:hover {
+  background: rgba(102, 126, 234, 0.8); /* hover 시 더 진하게 */
+}
+
+#n8n-ai-copilot-resize-handle:active {
+  background: #667eea; /* 드래그 중에는 완전히 보이게 */
+}
+
+/* 드래그 핸들 - 세로 (위쪽) */
+#n8n-ai-copilot-resize-handle-vertical {
+  position: absolute;
+  left: 15px; /* 왼쪽 핸들과 겹치지 않도록 */
+  top: 0; /* 위쪽 가장자리 */
+  width: calc(100% - 15px);
+  height: 15px;
+  cursor: ns-resize;
+  background: rgba(102, 126, 234, 0.5);
+  z-index: 1000; /* 매우 높은 z-index */
+  transition: background 0.2s;
+  pointer-events: auto; /* 명시적으로 이벤트 허용 */
+}
+
+#n8n-ai-copilot-resize-handle-vertical:hover {
+  background: rgba(102, 126, 234, 0.8);
+}
+
+#n8n-ai-copilot-resize-handle-vertical:active {
+  background: #667eea;
+}

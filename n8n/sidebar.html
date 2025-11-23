@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N8N AI Copilot</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #ffffff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-icon {
+      font-size: 20px;
+    }
+    
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .message {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      word-wrap: break-word;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .message.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    
+    .message.assistant {
+      align-self: flex-start;
+      background: #f3f4f6;
+      color: #1f2937;
+      border-bottom-left-radius: 4px;
+      line-height: 1.6;
+    }
+
+    /* Markdown 스타일링 */
+    .message.assistant h1,
+    .message.assistant h2,
+    .message.assistant h3 {
+      margin-top: 16px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .message.assistant h1 { font-size: 20px; }
+    .message.assistant h2 { font-size: 18px; }
+    .message.assistant h3 { font-size: 16px; }
+
+    .message.assistant p {
+      margin: 8px 0;
+    }
+
+    .message.assistant ul,
+    .message.assistant ol {
+      margin: 8px 0;
+      padding-left: 24px;
+    }
+
+    .message.assistant li {
+      margin: 4px 0;
+    }
+
+    .message.assistant code {
+      background: rgba(0,0,0,0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+
+    .message.assistant pre {
+      background: #1f2937;
+      color: #f3f4f6;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    .message.assistant pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    .message.assistant blockquote {
+      border-left: 3px solid #667eea;
+      padding-left: 12px;
+      margin: 12px 0;
+      color: #6b7280;
+    }
+
+    .message.assistant strong {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .message.assistant em {
+      font-style: italic;
+    }
+
+    .message.assistant hr {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 16px 0;
+    }
+
+    /* 단계 버튼 스타일 */
+    .step-button {
+      display: inline-block;
+      padding: 8px 16px;
+      margin: 4px 4px 4px 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .step-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .step-button:active {
+      transform: translateY(0);
+    }
+
+    /* 자동 입력 안내 스타일 */
+    .autofill-instructions {
+      margin-top: 12px;
+    }
+
+    .autofill-button {
+      display: inline-block;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .autofill-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .autofill-button:active {
+      transform: translateY(0);
+    }
+
+    .autofill-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .autofill-hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .message.error {
+      align-self: flex-start;
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 3px solid #ef4444;
+    }
+    
+    .message pre {
+      background: rgba(0,0,0,0.05);
+      padding: 8px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 16px;
+      background: #f3f4f6;
+      border-radius: 12px;
+      max-width: 85%;
+    }
+    
+    .loading-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9ca3af;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+    
+    .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+    
+    .input-container {
+      padding: 16px;
+      background: white;
+      border-top: 1px solid #e5e7eb;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .input-wrapper {
+      display: flex;
+      gap: 8px;
+    }
+    
+    #messageInput {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    #messageInput:focus {
+      border-color: #667eea;
+    }
+    
+    #sendButton {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    #sendButton:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    #sendButton:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .quick-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .quick-action-btn {
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .quick-action-btn:hover {
+      background: #f3f4f6;
+      border-color: #667eea;
+      color: #667eea;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 3px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    /* ========================================
+       가로 워크플로우 (Horizontal Flow)
+       ======================================== */
+
+    .workflow-container {
+      margin: 16px 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 12px;
+      border: 2px solid #e5e7eb;
+      overflow-x: auto;
+    }
+
+    .workflow-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .workflow-flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: min-content;
+      padding: 8px 0;
+    }
+
+    .flow-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 100px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .flow-node:hover .node-box {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+    }
+
+    .node-box {
+      background: white;
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border: 2px solid #667eea;
+      transition: all 0.2s;
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .node-box.trigger {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    }
+
+    .node-box.action {
+      border-color: #667eea;
+      background: white;
+    }
+
+    .node-box.output {
+      border-color: #f59e0b;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    }
+
+    .node-icon {
+      font-size: 18px;
+      margin-bottom: 4px;
+      color: #667eea;
+    }
+
+    .node-box.trigger .node-icon {
+      color: #10b981;
+    }
+
+    .node-box.output .node-icon {
+      color: #f59e0b;
+    }
+
+    .node-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1f2937;
+      font-family: 'Courier New', monospace;
+    }
+
+    .node-sublabel {
+      font-size: 10px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .flow-arrow {
+      font-size: 24px;
+      color: #9ca3af;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    /* 노드 옵션 선택 (드롭다운 스타일) */
+    .node-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+      border: 2px dashed #d1d5db;
+    }
+
+    .option-btn {
+      padding: 8px 16px;
+      background: white;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .option-btn:hover {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .option-btn.selected {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .option-label {
+      font-size: 11px;
+      color: #6b7280;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    /* 인라인 파라미터 입력 */
+    .inline-input {
+      margin: 8px 0;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+      border: 2px solid #e5e7eb;
+    }
+
+    .inline-input input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .inline-input input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .inline-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <i class="fa-solid fa-robot header-icon"></i>
+    <span>N8N AI Copilot</span>
+  </div>
+  
+  <div class="messages-container scrollbar-thin" id="messagesContainer">
+    <div class="message assistant">
+      N8N 워크플로우 전문가입니다.<br><br>
+      무엇을 만들고 싶으신가요?
+    </div>
+  </div>
+  
+  <div class="input-container">
+    <div class="quick-actions">
+      <button class="quick-action-btn" data-action="analyze-error">
+        <i class="fa-solid fa-magnifying-glass"></i> 에러 분석
+      </button>
+      <button class="quick-action-btn" data-action="generate-json">
+        <i class="fa-solid fa-code"></i> JSON 생성
+      </button>
+      <button class="quick-action-btn" data-action="detail">
+        <i class="fa-solid fa-circle-info"></i> 자세히 알려줘
+      </button>
+    </div>
+    
+    <div class="input-wrapper">
+      <input 
+        type="text" 
+        id="messageInput" 
+        placeholder="메시지를 입력하세요..."
+        autocomplete="off"
+      />
+      <button id="sendButton">전송</button>
+    </div>
+  </div>
+
+  <!-- 마크다운 파싱은 sidebar-iframe.js의 parseMarkdownManually() 사용 -->
+  <script src="sidebar-iframe.js"></script>
+</body>
+</html>
